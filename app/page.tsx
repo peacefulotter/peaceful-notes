@@ -5,8 +5,7 @@ import { ChangeEventHandler, useState } from "react";
 import Page from "@/components/Page";
 import Renderer from "@/components/Renderer";
 
-const testString = `
-# H1
+const testString = `# H1
 ## H2
 ### H3
 this is a normal paragraph
@@ -34,9 +33,15 @@ export default function Home() {
 	const onChange: ChangeEventHandler<HTMLTextAreaElement> = ({target}) => setEditor(target.value)
 
 	return (
-		<main className="grid grid-cols-2 min-h-screen p-12 bg-sky-100">
-			<Page editor={editor} onChange={onChange} />
-			<Renderer editor={editor} />
+		<main className='relative min-h-screen h-full max-h-screen p-12 bg-neutral-200'>
+			<div className='absolute flex gap-2 bg-sky-200 rounded-tl-xl rounded-br-xl w-fit py-2 px-8'>
+                <div className='font-bold'>⌂ &gt; path &gt; to &gt; file &gt;</div>
+                <div className='font-thin'>notes.md</div>
+            </div>
+			<div className='grid grid-cols-2 h-full overflow-scroll rounded-xl'>
+				<Page editor={editor} onChange={onChange} />
+				<Renderer editor={editor} />
+			</div>
 		</main>
 	)
 }

@@ -134,7 +134,7 @@ export default function Renderer( { editor }: IRenderer ) {
 
     return (
         <MathJax.Provider>
-            <div className='rounded bg-slate-50 w-full h-full p-8'>
+            <div className='bg-slate-100 w-full h-full max-h-full p-8'>
                 { rendered }
             </div>
         </MathJax.Provider>
