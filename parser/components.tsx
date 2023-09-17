@@ -30,7 +30,7 @@ export const CustomLi = ({children, ...props}: BasicProps) =>
     <li {...props} className='break-words bg-yellow-200'>{children}</li>
 
 export const CustomCode = ({children, ...props}: BasicProps) => 
-    <code {...props} className='break-words bg-gray-200 py-1 px-2 rounded'>{children}</code>
+    <code {...props} className='break-words bg-gray-200 py-1 px-2 rounded mx-2'>{children}</code>
 
 export const CustomMath = ({v, inline}: MathProps) => 
     <MathJax.Node inline={inline} formula={v} />

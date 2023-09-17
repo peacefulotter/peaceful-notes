@@ -17,7 +17,10 @@ export default function Renderer( { editor }: IRenderer ) {
     useEffect( () => {
         // const parser = Parser.fromEditor(editor)
         const parser = new ParserV2(editor)
-        setRendered(parser.parse())
+        const res = parser.parse()
+        console.log(res);
+        
+        setRendered(res)
     }, [editor] )
 
     return (
