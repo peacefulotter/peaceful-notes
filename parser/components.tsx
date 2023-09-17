@@ -32,11 +32,13 @@ export const CustomLi = ({children, ...props}: BasicProps) =>
 export const CustomCode = ({children, ...props}: BasicProps) => 
     <code {...props} className='break-words bg-gray-200 py-1 px-2 rounded mx-2'>{children}</code>
 
-export const CustomCodeBlock = ({children}: BasicProps) => 
+export const CustomCodeblock = ({children}: BasicProps) => 
     <div className='font-mono whitespace-pre-wrap bg-gray-200 rounded w-full px-4 py-3'>{children}</div>
 
-    export const CustomMath = ({children, ...props}: BasicProps) => {
-    const formula = (children as string[]).join('')
+export const CustomMath = ({children, ...props}: BasicProps) => {
+    const formula = Array.isArray(children) 
+        ? (children as string[]).join('')
+        : ''
     return <MathJax.Node inline={props.inline} formula={formula} />
 } 
 
@@ -46,5 +48,8 @@ export const CustomBold = ({children}: BasicProps) =>
 
 export const CustomItalic = ({children}: BasicProps) => 
     <i>{children}</i>
+
+export const CustomBoldItalic = ({children}: BasicProps) => 
+    <CustomBold><CustomItalic>{children}</CustomItalic></CustomBold>
 
 // italic, underline, colors

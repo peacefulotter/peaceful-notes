@@ -5,7 +5,7 @@ import { ChangeEventHandler, useState } from "react";
 import Page from "@/components/Page";
 import Renderer from "@/components/Renderer";
 
-/*
+
 const testString = `# H1 
 ## H2 
 ### H3
@@ -14,8 +14,9 @@ this is a normal paragraph
 *italic*    **bold**     ***italic + bold*** 
 
 \` code: foo(bar: Baz)\`
-\`\`
-This is a long codeblock that spans on 
+
+
+\`\`This is a long codeblock that spans on 
 multiple lines and might be syntax
 highlighted in the future :/
 \`\`
@@ -30,8 +31,8 @@ highlighted in the future :/
 - list with ul 1.3
 --
 
-- \` list with code:   foo(bar: Baz) \`
-- \`\`  list with codeblock 
+- \`list with code:   foo(bar: Baz)\`
+- \`\`list with codeblock 
 - spanning multiple lines
 - need to work on styling
 \`\`
@@ -44,9 +45,9 @@ f(x) = \\int_{-\\infty}^\\infty
   \\,d\\xi
 @@
 `
-*/
 
-const testString = `# H1`
+
+// const testString = `a\n\`\`b\`\`\nc`
 
 export default function Home() {
 	const [editor, setEditor] = useState(testString)

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { CustomBold, CustomCode, CustomH1, CustomH2, CustomH3, CustomItalic, CustomLi, CustomMath, CustomUl } from "@/parser/components";
+import { CustomBold, CustomBoldItalic, CustomCode, CustomCodeblock, CustomH1, CustomH2, CustomH3, CustomItalic, CustomLi, CustomMath, CustomUl } from "@/parser/components";
 import { BasicProps, Token } from './types';
 import { ValueOf } from 'next/dist/shared/lib/constants';
 
@@ -15,6 +15,7 @@ export const Syntax = {
     Ul: '--',
     Italic: '*',
     Bold: '**',
+    BoldItalic: '***',
 } as const
 
 const backspace = '\n'
@@ -26,6 +27,7 @@ export const tokenInSyntax = (token: string) =>
 export default interface Builder {
     endToken: Token;
     parseInner: boolean;
+    keepBackspace?: boolean;
     staticProps?: any;
     props?: () => any;
     node: ({ children, ...props }: BasicProps) => ReactNode;
@@ -37,16 +39,19 @@ export const syntaxBuilders: Record<SyntaxValues, Builder> = {
     [Syntax.H1]: { 
         endToken: backspace,
         parseInner: true,  
+        keepBackspace: true,
         node: CustomH1 
     },
     [Syntax.H2]: { 
         endToken: backspace,
         parseInner: true,  
+        keepBackspace: true,
         node: CustomH2 
     },
     [Syntax.H3]: { 
         endToken: backspace, 
         parseInner: true, 
+        keepBackspace: true,
         node: CustomH3 
     },
     [Syntax.Code]: { 
@@ -57,7 +62,7 @@ export const syntaxBuilders: Record<SyntaxValues, Builder> = {
     [Syntax.Codeblock]: { 
         endToken: Syntax.Codeblock, 
         parseInner: false, 
-        node: CustomCode 
+        node: CustomCodeblock 
     },
     [Syntax.MathInline]: { 
         endToken: backspace, 
@@ -90,5 +95,10 @@ export const syntaxBuilders: Record<SyntaxValues, Builder> = {
         endToken: Syntax.Italic,
         parseInner: true,
         node: CustomItalic,
+    },
+    [Syntax.BoldItalic]: {
+        endToken: Syntax.BoldItalic,
+        parseInner: true,
+        node: CustomBoldItalic,
     }
 }

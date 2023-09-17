@@ -1,8 +1,7 @@
 
 import { Line, Editor, Token } from "@/parserv2/types";
-import { ReactNode } from "react";
-import Builder, { Syntax, syntaxBuilders, tokenInSyntax } from "./syntax";
-import { match } from "assert";
+import { Fragment, ReactNode } from "react";
+import Builder, { syntaxBuilders, tokenInSyntax } from "./syntax";
 
 
 export default class ParserV2 {
@@ -23,23 +22,29 @@ export default class ParserV2 {
         console.log(this.data);
     }
 
-    private pullUntil(until: string, parse?: boolean): ReactNode {
+    private pullUntil(until: string, parse?: boolean, keepBackspace?: boolean): ReactNode {
         const acc = []
         let matchUntil = ''
         let token = this.pullToken();
-        while (token !== undefined && token !== until) {
-            if ( until.startsWith(matchUntil + token) ) {
-                matchUntil += token;
-                if ( matchUntil === until )
-                    break;
-            } else
+        
+        while (token !== undefined && matchUntil !== until ) {
+            matchUntil += token;
+            console.log(`>> parseUntil until=${JSON.stringify(until)}, matchUntil=${JSON.stringify(matchUntil)} startWith: ${until.startsWith(matchUntil)} token: ${JSON.stringify(token)}`);
+            
+            if ( !until.startsWith(matchUntil) ) {
+                for (let prevTokens of matchUntil) {
+                    const node = parse ? this.parseToken(prevTokens) : prevTokens;
+                    acc.push(node)
+                }
                 matchUntil = ''
-            console.log(JSON.stringify(`>> parseUntil until=${until}, matchUntil=${matchUntil} idx=${this.idx}, token: ${JSON.stringify(token)}`));
+            }
 
-            const node = parse ? this.parseToken(token) : token;
-            acc.push(node)
             token = this.pullToken()
         }
+        
+        if (keepBackspace && until === '\n' && token !== undefined)
+            this.idx--;
+
         return acc.length === 0 ? '...' : acc;
     }
 
@@ -50,9 +55,9 @@ export default class ParserV2 {
     }
 
     private buildNode(builder: Builder): ReactNode {
-        const { endToken, parseInner, staticProps } = builder
+        const { endToken, parseInner, staticProps, keepBackspace } = builder
         const props = { ...staticProps, ...builder.props?.() }
-        const children = this.pullUntil(endToken, parseInner)
+        const children = this.pullUntil(endToken, parseInner, keepBackspace)
         const Node = builder.node;
         return <Node key={`node-${this.idx}`} {...props}>{children}</Node>
     }
@@ -78,13 +83,12 @@ export default class ParserV2 {
         console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
 
         if (tokenInSyntax(token)) {
-            console.log('========= Creating ');
             const builder = this.getBuilder(token)
             console.log('Builder', builder);
             return this.buildNode(builder)
         }
         else if ( token === ' ' )
-            return <>&nbsp;</>
+            return <Fragment key={`fragment-${this.idx}`}>&nbsp;</Fragment>
         else if ( token === '\n' )
             return <br key={`br-${this.idx}`}></br>
         return token
