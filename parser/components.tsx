@@ -5,8 +5,7 @@ import { BasicProps } from "./types"
 
 //  const crimson = Crimson_Pro({ subsets: ['latin'] })
 
-export const CustomBr = ({}: BasicProps) => 
-    <br />
+export const CustomBr = ({}: BasicProps) => <div className="h-2"></div>
 
 export const CustomNothing = ({children, ...props}: BasicProps) => 
     <>{children}<br/></>

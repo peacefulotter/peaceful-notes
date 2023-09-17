@@ -27,7 +27,6 @@ export const tokenInSyntax = (token: string) =>
 export default interface Builder {
     endToken: Token;
     parseInner: boolean;
-    keepBackspace?: boolean;
     staticProps?: any;
     props?: () => any;
     node: ({ children, ...props }: BasicProps) => ReactNode;
@@ -39,19 +38,16 @@ export const syntaxBuilders: Record<SyntaxValues, Builder> = {
     [Syntax.H1]: { 
         endToken: backspace,
         parseInner: true,  
-        keepBackspace: true,
         node: CustomH1 
     },
     [Syntax.H2]: { 
         endToken: backspace,
         parseInner: true,  
-        keepBackspace: true,
         node: CustomH2 
     },
     [Syntax.H3]: { 
         endToken: backspace, 
         parseInner: true, 
-        keepBackspace: true,
         node: CustomH3 
     },
     [Syntax.Code]: { 

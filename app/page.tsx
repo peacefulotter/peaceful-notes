@@ -6,6 +6,7 @@ import Page from "@/components/Page";
 import Renderer from "@/components/Renderer";
 
 
+
 const testString = `# H1 
 ## H2 
 ### H3
@@ -47,7 +48,11 @@ f(x) = \\int_{-\\infty}^\\infty
 `
 
 
-// const testString = `a\n\`\`b\`\`\nc`
+// const testString = `--
+// - a
+// - b
+// - c
+// --`
 
 export default function Home() {
 	const [editor, setEditor] = useState(testString)
