@@ -5,28 +5,46 @@ import { ChangeEventHandler, useState } from "react";
 import Page from "@/components/Page";
 import Renderer from "@/components/Renderer";
 
-// const testString = `# H1
-// ## H2
-// ### H3
-// this is a normal paragraph
-// \` code:   foo(bar: Baz)
+/*
+const testString = `# H1 
+## H2 
+### H3
 
-// - list 1.1
-// - list 1.2
-// - list 1.3
+this is a normal paragraph
+*italic*    **bold**     ***italic + bold*** 
 
-// - \` list with code:   foo(bar: Baz)
-// - \`\`\`  list with codeblock 
-// - spanning multiple lines
-// - need to work on styling
-// \`\`\`
+\` code: foo(bar: Baz)\`
+\`\`
+This is a long codeblock that spans on 
+multiple lines and might be syntax
+highlighted in the future :/
+\`\`
 
-// \`\`\` 
-// This is a long codeblock that spans on 
-// multiple lines and might be syntax
-// highlighted in the future :/
-// \`\`\`
-// `
+- list 1.1
+- list 1.2
+- list 1.3
+
+--
+- list with ul 1.1
+- list with ul 1.2
+- list with ul 1.3
+--
+
+- \` list with code:   foo(bar: Baz) \`
+- \`\`  list with codeblock 
+- spanning multiple lines
+- need to work on styling
+\`\`
+
+
+@ a_x + f = 3^{e} 
+@@ 
+f(x) = \\int_{-\\infty}^\\infty
+  \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
+  \\,d\\xi
+@@
+`
+*/
 
 const testString = `# H1`
 

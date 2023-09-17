@@ -1,43 +1,18 @@
 
 import { Line, Editor, Token } from "@/parserv2/types";
-import Tokens from '@/parserv2/tokens'
 import { ReactNode } from "react";
-import TitleBuilder from "./handlers/TitleBuilder";
-import Builder from "./handlers";
-import CodeBuilder from "./handlers/CodeBuilder";
+import Builder, { Syntax, syntaxBuilders, tokenInSyntax } from "./syntax";
+import { match } from "assert";
 
 
 export default class ParserV2 {
     idx = 0;
     data: Line;
 
-
-    // Some tokens require to be built because they consist of multiple tokens (e.g. titles ###)
-    private TokenHandlers = {
-        [Tokens.Title]: TitleBuilder,
-        [Tokens.Code]: CodeBuilder
-    } 
-
     // private ComplexElementMap: Record<Token, (i: number) => ReactNode> = {
-    //     '-': (line: Line) => {
-    //         const lines = this.requestLineUntil( ([key, _]) => key !== '-' )
-    //         const vals = [line, ...lines].map( ([_, val]) => val ).filter( val => val !== undefined )
-    //         const list = Parser.fromArray(vals).parse()
-    //         console.log(list);
-    //         const elts = list.map((elt, i) => <CustomLi key={`li-${this.acc.length}-${i}`}>{elt}</CustomLi>)
-    //         this.createElt(CustomUl, elts)
-    //     },
-    //     '```': ([_, val]: Line) => {
-    //         const lines = this.requestLineUntil( ([key, _]) => key === '```' )
-    //         const str = (val ? val + '\n' : '') + lines.map(([k, v]) => k + ' ' + v).join('\n')
-    //         this.createElt(CustomCodeBlock, str)
-    //     },
     //     '[': ([_, val]: Line) => {
 
     //     },
-    //     '@': ([_, v]: Line) => this.createEltWithProps(CustomMath, {v, inline: true}),
-    //     '@@': ([_, v]: Line) => this.createEltWithProps(CustomMath, {v, inline: false}),
-    // }
 
     constructor(editor: Editor) {
         console.log('==================================================');
@@ -48,16 +23,24 @@ export default class ParserV2 {
         console.log(this.data);
     }
 
-    private parseUntil(until: string): ReactNode {
+    private pullUntil(until: string, parse?: boolean): ReactNode {
         const acc = []
+        let matchUntil = ''
         let token = this.pullToken();
         while (token !== undefined && token !== until) {
-            console.log(JSON.stringify(`>> parseUntil( until=${until} ), idx=${this.idx}, token: ${JSON.stringify(token)}`));
-            const node = this.parseToken(token)
+            if ( until.startsWith(matchUntil + token) ) {
+                matchUntil += token;
+                if ( matchUntil === until )
+                    break;
+            } else
+                matchUntil = ''
+            console.log(JSON.stringify(`>> parseUntil until=${until}, matchUntil=${matchUntil} idx=${this.idx}, token: ${JSON.stringify(token)}`));
+
+            const node = parse ? this.parseToken(token) : token;
             acc.push(node)
             token = this.pullToken()
         }
-        return acc.length === 0 ? <p>building...</p> : acc;
+        return acc.length === 0 ? '...' : acc;
     }
 
     pullToken(): Token | undefined {
@@ -67,30 +50,43 @@ export default class ParserV2 {
     }
 
     private buildNode(builder: Builder): ReactNode {
-        const savedIdx = this.idx;
-        builder.token?.()
-        builder.props?.()
-        console.log('building at: ', this.idx);
-        const children = this.parseUntil(builder.endToken)
-        return builder.node(savedIdx, children)
+        const { endToken, parseInner, staticProps } = builder
+        const props = { ...staticProps, ...builder.props?.() }
+        const children = this.pullUntil(endToken, parseInner)
+        const Node = builder.node;
+        return <Node key={`node-${this.idx}`} {...props}>{children}</Node>
+    }
+
+    private getBuilder(token: string): Builder {
+        let fullToken = token;
+        while (tokenInSyntax(fullToken)) {
+            const curToken = this.pullToken()
+            if ( curToken === undefined ) break
+            fullToken += curToken
+            
+        }
+        if (fullToken.length > 1) {
+            this.idx--;
+            fullToken = fullToken.slice(0, -1)
+        }
+        return syntaxBuilders[fullToken as keyof typeof syntaxBuilders]
     }
     
 
     private parseToken = (token: string): ReactNode => {
 
         console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
-        
-        if ( token in this.TokenHandlers ) {
-            console.log('========= Creating ' + token);
-            const BuilderClass = this.TokenHandlers[token]
-            const builder = new BuilderClass(this)
+
+        if (tokenInSyntax(token)) {
+            console.log('========= Creating ');
+            const builder = this.getBuilder(token)
+            console.log('Builder', builder);
             return this.buildNode(builder)
         }
         else if ( token === ' ' )
             return <>&nbsp;</>
         else if ( token === '\n' )
             return <br key={`br-${this.idx}`}></br>
-
         return token
     }
 
