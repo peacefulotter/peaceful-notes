@@ -1,105 +1,101 @@
 
-import { 
-    CustomBr, CustomCode, CustomCodeBlock, 
-    CustomH1, CustomH2, CustomH3, 
-    CustomMath, CustomLi, CustomNothing, 
-    CustomParagraph, CustomUl 
-} from "@/parser/components";
-import { Line, Editor, Key } from "@/parser/types";
-import { FC, ReactNode } from "react";
+import { Fragment, ReactNode } from "react";
+import Builder, { syntaxBuilders, tokenInSyntax } from "./syntax";
+import { Line, Editor, Token } from "./types";
+import { CustomBr } from "./components";
 
-export default class Parser {
-    private acc: JSX.Element[] = [];
-    private idx = 0;
 
-    private lines: Line[];
+export default class ParserV2 {
+    idx = 0;
+    data: Line;
 
-    private SimpleKeyElementMap: Record<Key, FC<any>> = {
-        '#': CustomH1,
-        '##': CustomH2,
-        '###': CustomH3,
-        '`': CustomCode,
+    constructor(editor: Editor) {
+        console.log('==================================================');
+        this.data = editor
+            .split(/(\n)/g) // split by line-break (\n)
+            .map( line => line.split('') ) // turn into tokens
+            .flat();
+        console.log(this.data);
     }
 
-    private ComplexKeyElementMap: Record<Key, (line: Line) => void> = {
-        '-': (line: Line) => {
-            const lines = this.requestLineUntil( ([key, _]) => key !== '-' )
-            const vals = [line, ...lines].map( ([_, val]) => val ).filter( val => val !== undefined )
-            const list = Parser.fromArray(vals).parse()
-            console.log(list);
-            const elts = list.map((elt, i) => <CustomLi key={`li-${this.acc.length}-${i}`}>{elt}</CustomLi>)
-            this.addElt(CustomUl, elts)
-        },
-        '```': ([_, val]: Line) => {
-            const lines = this.requestLineUntil( ([key, _]) => key === '```' )
-            const str = (val ? val + '\n' : '') + lines.map(([k, v]) => k + ' ' + v).join('\n')
-            this.addElt(CustomCodeBlock, str)
-        },
-        '[': ([_, val]: Line) => {
+    private pullUntil(until: string, parse?: boolean): ReactNode {
+        const acc = []
+        let matchUntil = ''
+        
+        while (matchUntil !== until ) {
+            let token = this.pullToken()
+            if (token === undefined)
+                break;
 
-        },
-        '@': ([_, v]: Line) => this.addEltWithProps(CustomMath, {v, inline: true}),
-        '@@': ([_, v]: Line) => this.addEltWithProps(CustomMath, {v, inline: false}),
-    }
+            matchUntil += token;
+            console.log(`>> parseUntil until=${JSON.stringify(until)}, matchUntil=${JSON.stringify(matchUntil)} startWith: ${until.startsWith(matchUntil)} token: ${JSON.stringify(token)}`);
+            
+            if ( !until.startsWith(matchUntil) ) {
+                const prevToken = matchUntil.at(0) as string
+                const node = parse ? this.parseToken(prevToken) : prevToken;
+                acc.push(node)
+                matchUntil = ''
+            }
 
-    static fromEditor(editor: Editor) {
-        return Parser.fromArray(editor.split('\n'))
-    }
-
-    static fromArray(arr: string[]) {
-        const lines: Line[] = arr.map( line => {
-            const [key, val] = line.split(/(?<=^\S+)\s/)
-            return [key, val]
-        } );
-        return new Parser(lines)
-    }
-
-    private constructor(lines: Line[]) {
-        this.lines = lines;
-    }
-
-    private addEltWithProps<T = {}>(Elt: FC<T>, props: T, children?: ReactNode) {
-        this.acc.push( <Elt key={`elt-${this.acc.length}`} {...props}>{children}</Elt> )
-    }
-
-    private addElt(Elt: FC<{}>, children?: ReactNode) {
-        this.addEltWithProps(Elt, {}, children)
-    }
-
-    private requestNextLine = (): Line | undefined => {
-        if (this.idx >= this.lines.length) 
-            return undefined
-        const [key, val] = this.lines[this.idx++];
-        return [key, val]
-    }
-
-    private requestLineUntil = (pred: (l: Line) => boolean): Line[] => {
-        const lines: Line[] = [] 
-        while (true) {
-            const line = this.requestNextLine()
-            if ( line === undefined || pred(line) ) 
-                return lines;
-            lines.push(line)
         }
+        
+        return acc.length === 0 ? '...' : acc;
     }
 
-    private parseLine = (line: Line): void => {
-        const [key, v] = line;
-        if (!key && !v) 
-            this.addElt(CustomBr)
-        else if ( key in this.SimpleKeyElementMap )
-            this.addElt(this.SimpleKeyElementMap[key], v )
-        else if (key in this.ComplexKeyElementMap )
-            this.ComplexKeyElementMap[key](line)
-        else 
-            this.addElt(CustomNothing, key + (v ? ' ' + v : '') )
+    pullToken(): Token | undefined {
+        return this.idx < this.data.length 
+            ? this.data[this.idx++]
+            : undefined
     }
 
-    parse = (): JSX.Element[] => {
-        while (true) {
-            const line = this.requestNextLine() 
-            if ( line === undefined ) return this.acc
-            this.parseLine(line)
+    private buildNode(builder: Builder): ReactNode {
+        const { endToken, parseInner, staticProps } = builder
+        const props = { ...staticProps, ...builder.props?.() }
+        const children = this.pullUntil(endToken, parseInner)
+        const Node = builder.node;
+        return <Node key={`node-${this.idx}`} {...props}>{children}</Node>
+    }
+
+    private getBuilder(token: string): Builder {
+        let fullToken = token;
+        while (tokenInSyntax(fullToken)) {
+            const curToken = this.pullToken()
+            if ( curToken === undefined ) break
+            fullToken += curToken
+            
         }
+        if (fullToken.length > 1) {
+            this.idx--;
+            fullToken = fullToken.slice(0, -1)
+        }
+        return syntaxBuilders[fullToken as keyof typeof syntaxBuilders]
+    }
+    
+
+    private parseToken = (token: string): ReactNode => {
+
+        console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
+
+        if (tokenInSyntax(token)) {
+            const builder = this.getBuilder(token)
+            console.log('Builder', builder);
+            return this.buildNode(builder)
+        }
+        else if ( token === ' ' )
+            return <Fragment key={`fragment-${this.idx}`}>&nbsp;</Fragment>
+        else if ( token === '\n' )
+            return <CustomBr key={`br-${this.idx}`}></CustomBr>
+        return token
+    }
+
+    parse = (): ReactNode => {
+        const acc: ReactNode[] = []
+        for(;this.idx < this.data.length;) {
+            const token = this.pullToken()
+            if (token === undefined) continue;
+            const node = this.parseToken(token)
+            acc.push(node)
+        }
+        return acc;
     }
 }

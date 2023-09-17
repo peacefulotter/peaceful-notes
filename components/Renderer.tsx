@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import MathJax from "react-mathjax";
 
 import { Editor } from "@/parser/types";
-import ParserV2 from "@/parserv2";
+import ParserV2 from "@/parser";
 
 interface IRenderer {
     editor: Editor;
