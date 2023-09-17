@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import MathJax from "react-mathjax";
 
 import { Editor } from "@/parser/types";
-import ParserV2 from "@/parser";
+import Parser from "@/parser";
 
 interface IRenderer {
     editor: Editor;
@@ -15,7 +15,7 @@ export default function Renderer( { editor }: IRenderer ) {
     const [rendered, setRendered] = useState<ReactNode>()
 
     useEffect( () => {
-        const parser = new ParserV2(editor)
+        const parser = new Parser(editor)
         const res = parser.parse()
         console.log(res);
         setRendered(res)

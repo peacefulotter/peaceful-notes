@@ -5,7 +5,7 @@ import { Line, Editor, Token } from "./types";
 import { CustomBr } from "./components";
 
 
-export default class ParserV2 {
+export default class Parser {
     idx = 0;
     data: Line;
 
