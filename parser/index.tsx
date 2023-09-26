@@ -1,7 +1,7 @@
 
 import { Fragment, ReactNode } from "react";
-import Builder, { syntaxBuilders, tokenInSyntax } from "./syntax";
-import { Line, Editor, Token } from "./types";
+import { syntaxBuilders, tokenInSyntax } from "./syntax";
+import { Line, Editor, Token, Builder } from "./types";
 import { CustomBr } from "./components";
 
 
@@ -49,11 +49,10 @@ export default class Parser {
     }
 
     private buildNode(builder: Builder): ReactNode {
-        const { endToken, parseInner, staticProps } = builder
-        const props = { ...staticProps, ...builder.props?.() }
+        const { endToken, parseInner } = builder
         const children = this.pullUntil(endToken, parseInner)
         const Node = builder.node;
-        return <Node key={`node-${this.idx}`} {...props}>{children}</Node>
+        return <Node key={`node-${this.idx}`} {...builder.props}>{children}</Node>
     }
 
     private getBuilder(token: string): Builder {

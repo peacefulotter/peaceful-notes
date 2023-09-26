@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { CustomBold, CustomBoldItalic, CustomCode, CustomCodeblock, CustomH1, CustomH2, CustomH3, CustomItalic, CustomLi, CustomMath, CustomUl } from "@/parser/components";
-import { BasicProps, Token } from './types';
+import { BasicProps, Builder, Token } from './types';
 import { ValueOf } from 'next/dist/shared/lib/constants';
 
 export const Syntax = {
@@ -20,81 +20,76 @@ export const Syntax = {
 
 const backspace = '\n'
 
+const syntaxCharacters = Object.values(Syntax) as string[]
+
 export const tokenInSyntax = (token: string) => 
-    (Object.values(Syntax) as string[]).includes(token)
+    syntaxCharacters.includes(token)
 
 
-export default interface Builder {
-    endToken: Token;
-    parseInner: boolean;
-    staticProps?: any;
-    props?: () => any;
-    node: ({ children, ...props }: BasicProps) => ReactNode;
-}
+// enforce type safety for builders
+const createBuilder = <T = undefined,>(builder: Builder<T>): Builder<T> => builder;
 
-type SyntaxValues = ValueOf<typeof Syntax> // typeof Syntax[keyof typeof Syntax];
-
-export const syntaxBuilders: Record<SyntaxValues, Builder> = {
-    [Syntax.H1]: { 
+export const syntaxBuilders = {
+    [Syntax.H1]: createBuilder({ 
         endToken: backspace,
         parseInner: true,  
         node: CustomH1 
-    },
-    [Syntax.H2]: { 
+    }),
+    [Syntax.H2]: createBuilder({ 
         endToken: backspace,
         parseInner: true,  
         node: CustomH2 
-    },
-    [Syntax.H3]: { 
+    }),
+    [Syntax.H3]: createBuilder({ 
         endToken: backspace, 
         parseInner: true, 
         node: CustomH3 
-    },
-    [Syntax.Code]: { 
+    }),
+    [Syntax.Code]: createBuilder({ 
         endToken: Syntax.Code, 
         parseInner: false, 
         node: CustomCode 
-    },
-    [Syntax.Codeblock]: { 
+    }),
+    [Syntax.Codeblock]: createBuilder({ 
         endToken: Syntax.Codeblock, 
         parseInner: false, 
         node: CustomCodeblock 
-    },
-    [Syntax.MathInline]: { 
+    }),
+    [Syntax.MathInline]: createBuilder({ 
         endToken: backspace, 
         parseInner: false, 
-        staticProps: { inline: true }, 
+        props: { inline: true }, 
         node: CustomMath 
-    },
-    [Syntax.Mathblock]: { 
+    }),
+    [Syntax.Mathblock]: createBuilder({
         endToken: Syntax.Mathblock, 
         parseInner: false, 
-        staticProps: { inline: false }, 
+        props: { inline: false }, 
         node: CustomMath 
-    },
-    [Syntax.Li]: { 
+    }),
+    [Syntax.Li]: createBuilder({
         endToken: backspace, 
         parseInner: true, 
         node: CustomLi 
-    },
-    [Syntax.Ul]: { 
+    }),
+    [Syntax.Ul]: createBuilder({
         endToken: Syntax.Ul, 
         parseInner: true, 
         node: CustomUl 
-    },
-    [Syntax.Bold]: {
+    }),
+    [Syntax.Bold]: createBuilder({
         endToken: Syntax.Bold,
         parseInner: true,
         node: CustomBold,
-    },
-    [Syntax.Italic]: {
+    }),
+    [Syntax.Italic]: createBuilder({
         endToken: Syntax.Italic,
         parseInner: true,
         node: CustomItalic,
-    },
-    [Syntax.BoldItalic]: {
+    }),
+    [Syntax.BoldItalic]: createBuilder({ 
         endToken: Syntax.BoldItalic,
         parseInner: true,
         node: CustomBoldItalic,
-    }
+    })
 }

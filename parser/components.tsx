@@ -1,13 +1,10 @@
 import MathJax from "react-mathjax"
-// import { Crimson_Pro } from 'next/font/google'
 
-import { BasicProps } from "./types"
-
-//  const crimson = Crimson_Pro({ subsets: ['latin'] })
+import { BasicProps, ComplexProps } from "./types"
 
 export const CustomBr = ({}: BasicProps) => <div className="h-2"></div>
 
-export const CustomNothing = ({children, ...props}: BasicProps) => 
+export const CustomNothing = ({children}: BasicProps) => 
     <>{children}<br/></>
 
 export const CustomParagraph = ({children, ...props}: BasicProps) => 
@@ -34,7 +31,7 @@ export const CustomCode = ({children, ...props}: BasicProps) =>
 export const CustomCodeblock = ({children}: BasicProps) => 
     <div className='font-mono whitespace-pre-wrap bg-gray-200 rounded w-full px-4 py-3'>{children}</div>
 
-export const CustomMath = ({children, ...props}: BasicProps) => {
+export const CustomMath = ({children, ...props}: ComplexProps<{inline: boolean}>) => {
     const formula = Array.isArray(children) 
         ? (children as string[]).join('')
         : ''
