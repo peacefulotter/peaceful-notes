@@ -1,7 +1,5 @@
-import { ReactNode } from 'react'
 import { CustomBold, CustomBoldItalic, CustomCode, CustomCodeblock, CustomH1, CustomH2, CustomH3, CustomItalic, CustomLi, CustomMath, CustomUl } from "@/parser/components";
-import { BasicProps, Builder, Token } from './types';
-import { ValueOf } from 'next/dist/shared/lib/constants';
+import { Builder } from './types';
 
 export const Syntax = {
     H1: '#',

@@ -52,21 +52,40 @@ export default class Parser {
         const { endToken, parseInner } = builder
         const children = this.pullUntil(endToken, parseInner)
         const Node = builder.node;
-        return <Node key={`node-${this.idx}`} {...builder.props}>{children}</Node>
+        return <Node key={`node-${this.idx}`} {...builder?.props}>{children}</Node>
+    }
+
+    // private getBuilder(token: string): Builder {
+    //     let fullToken = token;
+    //     while (tokenInSyntax(fullToken)) {
+    //         const curToken = this.pullToken()
+    //         if ( curToken === undefined ) break
+    //         fullToken += curToken
+            
+    //     }
+    //     if (fullToken.length > 1) {
+    //         this.idx--;
+    //         fullToken = fullToken.slice(0, -1)
+    //     }
+    //     return syntaxBuilders[fullToken as keyof typeof syntaxBuilders]
+    // }
+
+    private getFullToken(token: string) {
+        let fullToken = '';
+        let curToken: string | undefined = token;
+        while (tokenInSyntax(fullToken + curToken)) {
+            fullToken += curToken;
+            curToken = this.pullToken()
+            if ( curToken === undefined )
+                return { fullToken, push: false }
+        }
+        return { fullToken, push: curToken !== ' ' }
     }
 
     private getBuilder(token: string): Builder {
-        let fullToken = token;
-        while (tokenInSyntax(fullToken)) {
-            const curToken = this.pullToken()
-            if ( curToken === undefined ) break
-            fullToken += curToken
-            
-        }
-        if (fullToken.length > 1) {
+        const { fullToken, push } = this.getFullToken(token)
+        if (push)
             this.idx--;
-            fullToken = fullToken.slice(0, -1)
-        }
         return syntaxBuilders[fullToken as keyof typeof syntaxBuilders]
     }
     

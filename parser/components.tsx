@@ -1,51 +1,55 @@
 import MathJax from "react-mathjax"
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dark, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { BasicProps, ComplexProps } from "./types"
+import { ComponentProps } from "./types"
 
-export const CustomBr = ({}: BasicProps) => <div className="h-2"></div>
+export const CustomBr = ({}: ComponentProps) => <div className="h-2"></div>
 
-export const CustomNothing = ({children}: BasicProps) => 
+export const CustomNothing = ({ children }: ComponentProps) => 
     <>{children}<br/></>
 
-export const CustomParagraph = ({children, ...props}: BasicProps) => 
-    <p {...props} className=''>{children}</p>
+export const CustomParagraph = ({ children }: ComponentProps) => 
+    <p className=''>{children}</p>
     
-export const CustomH1 = ({children, ...props}: BasicProps) => 
-    <h1 {...props} className='break-words font-bold text-4xl border-b-2 border-neutral-500 mb-6'>{children}</h1>
+export const CustomH1 = ({ children }: ComponentProps) => 
+    <h1 className='break-words font-bold text-4xl border-b-2 border-neutral-500 mb-6'>{children}</h1>
 
-export const CustomH2 = ({children, ...props}: BasicProps) => 
-    <h2 {...props} className='break-words font-bold text-3xl mb-4'>{children}</h2>
+export const CustomH2 = ({ children }: ComponentProps) => 
+    <h2 className='break-words font-bold text-3xl mb-4'>{children}</h2>
 
-export const CustomH3 = ({children, ...props}: BasicProps) => 
-    <h3 {...props} className='break-words font-bold text-2xl mb-2'>{children}</h3>
+export const CustomH3 = ({ children }: ComponentProps) => 
+    <h3 className='break-words font-bold text-2xl mb-2'>{children}</h3>
 
-export const CustomUl = ({children, ...props}: BasicProps) => 
-    <ul {...props} className='break-words border-2 border-red-200 my-2 px-2 list-decimal'>{children}</ul>
+export const CustomUl = ({ children }: ComponentProps) => 
+    <ul className='break-words border-2 border-red-200 my-2 px-2 list-decimal'>{children}</ul>
 
-export const CustomLi = ({children, ...props}: BasicProps) => 
-    <li {...props} className='break-words bg-yellow-200'>{children}</li>
+export const CustomLi = ({ children }: ComponentProps) => 
+    <li className='break-words'>{children}</li>
 
-export const CustomCode = ({children, ...props}: BasicProps) => 
-    <code {...props} className='break-words bg-gray-200 py-1 px-2 rounded mx-2'>{children}</code>
+export const CustomCode = ({ children }: ComponentProps) => 
+    <SyntaxHighlighter language="javascript" style={prism} customStyle={{}}>
+        {(children as string[]).join('')}
+    </SyntaxHighlighter>
 
-export const CustomCodeblock = ({children}: BasicProps) => 
-    <div className='font-mono whitespace-pre-wrap bg-gray-200 rounded w-full px-4 py-3'>{children}</div>
+export const CustomCodeblock = ({ children }: ComponentProps) => 
+    <SyntaxHighlighter language="javascript" style={dark}>
+        {(children as string[]).join('')}
+    </SyntaxHighlighter>
 
-export const CustomMath = ({children, ...props}: ComplexProps<{inline: boolean}>) => {
+export const CustomMath = ({ children, inline }: ComponentProps<{inline: boolean}>) => {
     const formula = Array.isArray(children) 
         ? (children as string[]).join('')
         : ''
-    return <MathJax.Node inline={props.inline} formula={formula} />
+    return <MathJax.Node inline={inline} formula={formula} />
 } 
 
 
-export const CustomBold = ({children}: BasicProps) => 
+export const CustomBold = ({ children }: ComponentProps) => 
     <strong>{children}</strong>
 
-export const CustomItalic = ({children}: BasicProps) => 
+export const CustomItalic = ({ children }: ComponentProps) => 
     <i>{children}</i>
 
-export const CustomBoldItalic = ({children}: BasicProps) => 
+export const CustomBoldItalic = ({ children }: ComponentProps) => 
     <CustomBold><CustomItalic>{children}</CustomItalic></CustomBold>
-
-// italic, underline, colors
