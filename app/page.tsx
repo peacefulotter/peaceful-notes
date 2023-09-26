@@ -14,12 +14,13 @@ const testString = `# H1
 this is a normal paragraph
 *italic*    **bold**     ***italic + bold*** 
 
-\` code: foo(bar: Baz)\`
+\` code: foo(bar: Baz) => {} return 0\`
 
 
-\`\`This is a long codeblock that spans on 
-multiple lines and might be syntax
-highlighted in the future :/
+\`\`javascript 
+function(t: T) {
+  return () => t['a'];
+}
 \`\`
 
 - list 1.1

@@ -1,6 +1,8 @@
 import MathJax from "react-mathjax"
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dark, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { Highlight, themes } from 'prism-react-renderer'
 
 import { ComponentProps } from "./types"
 
@@ -27,13 +29,31 @@ export const CustomUl = ({ children }: ComponentProps) =>
 export const CustomLi = ({ children }: ComponentProps) => 
     <li className='break-words'>{children}</li>
 
-export const CustomCode = ({ children }: ComponentProps) => 
-    <SyntaxHighlighter language="javascript" style={prism} customStyle={{}}>
-        {(children as string[]).join('')}
-    </SyntaxHighlighter>
+export const CustomCode = ({ children }: ComponentProps) => {
+    const code = Array.isArray(children) 
+        ? children.join('')
+        : ''
+
+    return (
+        <Highlight
+            theme={themes.oneLight}
+            code={code}
+            language="ts"
+        >   
+        {({ tokens, getTokenProps }) => (
+            <p className="inline font-mono max-w-min whitespace-nowrap px-2 py-1 bg-neutral-200 rounded">
+                {tokens[0].map((token, key) => (
+                    <span key={key} {...getTokenProps({ token })} />
+                ))}
+            </p>
+        )}
+        </Highlight>
+    )
+}
+    
 
 export const CustomCodeblock = ({ children }: ComponentProps) => 
-    <SyntaxHighlighter language="javascript" style={dark}>
+    <SyntaxHighlighter language="javascript" style={oneDark}>
         {(children as string[]).join('')}
     </SyntaxHighlighter>
 
