@@ -1,17 +1,17 @@
 import { PropsWithChildren, ReactNode } from "react";
+import Parser from ".";
 
 export type Editor = string;
 export type Token = string;
 export type Line = Token[]
 
-export type ComponentProps<T = undefined> = T extends undefined | null ? PropsWithChildren : PropsWithChildren<T>
+export type ComponentProps<T = unknown, U extends object = {}> = 
+    PropsWithChildren<T & U>
 
-export type Builder<T = any> = {
+export type Builder<T extends object = {}, U extends object = {}> = {
     endToken: Token;
     parseInner: boolean;
-    node: ({ children, ...props }: ComponentProps<T>) => ReactNode;
-} & (
-    T extends undefined | null
-        ? { props?: T; } 
-        : { props: T; }
-)
+    node: ({ children, ...props }: ComponentProps<T, U>) => ReactNode;
+    staticProps?: T;
+    props?: (parser: Parser) => U;
+}

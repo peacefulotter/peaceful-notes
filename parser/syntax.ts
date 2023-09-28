@@ -1,5 +1,6 @@
 import { CustomBold, CustomBoldItalic, CustomCode, CustomCodeblock, CustomH1, CustomH2, CustomH3, CustomItalic, CustomLi, CustomMath, CustomUl } from "@/parser/components";
 import { Builder } from './types';
+import Parser from ".";
 
 export const Syntax = {
     H1: '#',
@@ -25,7 +26,7 @@ export const tokenInSyntax = (token: string) =>
 
 
 // enforce type safety for builders
-const createBuilder = <T = undefined,>(builder: Builder<T>): Builder<T> => builder;
+const createBuilder = <T extends object = {}, U extends object = {}>(builder: Builder<T, U>): Builder<T, U> => builder;
 
 export const syntaxBuilders = {
     [Syntax.H1]: createBuilder({ 
@@ -51,18 +52,23 @@ export const syntaxBuilders = {
     [Syntax.Codeblock]: createBuilder({ 
         endToken: Syntax.Codeblock, 
         parseInner: false, 
-        node: CustomCodeblock 
+        node: CustomCodeblock,
+        props: (parser: Parser) => {
+            const node = parser.pullUntil(backspace, false)
+            console.log("in props", node);
+            return { language: Array.isArray(node) ? node.join('') : undefined }
+        } 
     }),
     [Syntax.MathInline]: createBuilder({ 
         endToken: backspace, 
         parseInner: false, 
-        props: { inline: true }, 
+        staticProps: { inline: true }, 
         node: CustomMath 
     }),
     [Syntax.Mathblock]: createBuilder({
         endToken: Syntax.Mathblock, 
         parseInner: false, 
-        props: { inline: false }, 
+        staticProps: { inline: false }, 
         node: CustomMath 
     }),
     [Syntax.Li]: createBuilder({

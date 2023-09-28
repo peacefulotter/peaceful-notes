@@ -18,7 +18,7 @@ export default class Parser {
         console.log(this.data);
     }
 
-    private pullUntil(until: string, parse?: boolean): ReactNode {
+    pullUntil(until: string, parse?: boolean): ReactNode {
         const acc = []
         let matchUntil = ''
         
@@ -28,7 +28,7 @@ export default class Parser {
                 break;
 
             matchUntil += token;
-            console.log(`>> parseUntil until=${JSON.stringify(until)}, matchUntil=${JSON.stringify(matchUntil)} startWith: ${until.startsWith(matchUntil)} token: ${JSON.stringify(token)}`);
+            // console.log(`>> parseUntil until=${JSON.stringify(until)}, matchUntil=${JSON.stringify(matchUntil)} startWith: ${until.startsWith(matchUntil)} token: ${JSON.stringify(token)}`);
             
             if ( !until.startsWith(matchUntil) ) {
                 const prevToken = matchUntil.at(0) as string
@@ -50,9 +50,12 @@ export default class Parser {
 
     private buildNode(builder: Builder): ReactNode {
         const { endToken, parseInner } = builder
+        const props = builder.props?.(this) ||  {}
         const children = this.pullUntil(endToken, parseInner)
         const Node = builder.node;
-        return <Node key={`node-${this.idx}`} {...builder?.props}>{children}</Node>
+        console.log(props, builder?.staticProps);
+        
+        return <Node key={`node-${this.idx}`} {...props} {...builder?.staticProps}>{children}</Node>
     }
 
     // private getBuilder(token: string): Builder {
@@ -82,7 +85,7 @@ export default class Parser {
         return { fullToken, push: curToken !== ' ' }
     }
 
-    private getBuilder(token: string): Builder {
+    private getBuilder(token: string): Builder<any, any> {
         const { fullToken, push } = this.getFullToken(token)
         if (push)
             this.idx--;

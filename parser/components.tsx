@@ -52,10 +52,20 @@ export const CustomCode = ({ children }: ComponentProps) => {
 }
     
 
-export const CustomCodeblock = ({ children }: ComponentProps) => 
-    <SyntaxHighlighter language="javascript" style={oneDark}>
-        {(children as string[]).join('')}
-    </SyntaxHighlighter>
+export const CustomCodeblock = ({ children, language }: ComponentProps<unknown,{language: string | undefined}>) => {
+    const code = Array.isArray(children) 
+        ? children.join('')
+        : ''
+
+    console.log(code, language);
+    
+    return (
+        <SyntaxHighlighter language={language} style={oneDark}>
+            {code}
+        </SyntaxHighlighter>
+    )
+}
+    
 
 export const CustomMath = ({ children, inline }: ComponentProps<{inline: boolean}>) => {
     const formula = Array.isArray(children) 
