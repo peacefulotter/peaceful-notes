@@ -34,14 +34,9 @@ function(t: T) {
 --
 
 - \`list with code:   foo(bar: Baz)\`
-- \`\`list with codeblock 
-- spanning multiple lines
-- need to work on styling
-\`\`
-
 
 @ a_x + f = 3^{e} 
-@@ 
+# @@ 
 f(x) = \\int_{-\\infty}^\\infty
   \\hat f(\\xi)\\,e^{2 \\pi i \\xi x}
   \\,d\\xi

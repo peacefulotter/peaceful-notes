@@ -60,9 +60,6 @@ export const CustomCodeblock = ({ children, language }: ComponentProps<unknown,{
     const code = Array.isArray(children) 
         ? children.join('')
         : ''
-
-    console.log(code, language);
-    
     return (
         <SyntaxHighlighter language={language} style={oneDark}>
             {code}

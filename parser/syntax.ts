@@ -28,13 +28,15 @@ const backspace = '\n'
 
 const syntaxCharacters = Object.values(Syntax) as SyntaxChar[]
 
-export const tokenInSyntax = (token: string) => {
-    // syntaxCharacters.includes(token)
+export const tokenInSyntax = (token: string, newLine: boolean) => {
     for (let syntax of syntaxCharacters) {
-        const { token: syntaxToken, regex, newLine } = syntax;
+        const { token: syntaxToken, regex, newLine: newLineSyntax } = syntax;
         if (
-            (regex && new RegExp(`/^${regex}$/m`).test(token)) ||
-            (!regex && token == syntaxToken)
+            (newLineSyntax ? (newLine === newLineSyntax) : true) &&
+            (
+                (regex && new RegExp(`/^${regex}$/m`).test(token)) ||
+                (!regex && token == syntaxToken)
+            )
         )
             return true
     }

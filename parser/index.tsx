@@ -7,6 +7,7 @@ import { CustomBr } from "./components";
 
 export default class Parser {
     idx = 0;
+    newLine: boolean = true;
     data: Line;
 
     constructor(editor: Editor) {
@@ -36,8 +37,12 @@ export default class Parser {
                 acc.push(node)
                 matchUntil = ''
             }
-
         }
+
+        // Since we parsed it and we do not want an
+        // additional Br component, just set newLine to true here
+        if (until === '\n')
+            this.newLine = true;
         
         return acc.length === 0 ? '...' : acc;
     }
@@ -58,11 +63,10 @@ export default class Parser {
         return <Node key={`node-${this.idx}`} {...props} {...builder?.staticProps}>{children}</Node>
     }
 
-    // TOOD Add way to distinguish new line 
     private getFullToken(token: string) {
         let fullToken = '';
         let curToken: string | undefined = token;
-        while (tokenInSyntax(fullToken + curToken)) {
+        while (tokenInSyntax(fullToken + curToken, this.newLine)) {
             fullToken += curToken;
             curToken = this.pullToken()
             if ( curToken === undefined )
@@ -83,17 +87,23 @@ export default class Parser {
 
     private parseToken = (token: string): ReactNode => {
 
-        console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
-
-        if (tokenInSyntax(token)) {
+        // console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
+        if (tokenInSyntax(token, this.newLine)) {
             const builder = this.getBuilder(token)
+            this.newLine = false
             console.log('Builder', builder);
             return this.buildNode(builder)
         }
         else if ( token === ' ' )
             return <Fragment key={`fragment-${this.idx}`}>&nbsp;</Fragment>
-        else if ( token === '\n' )
+        else if ( token === '\n' ) {
+            this.newLine = true
             return <CustomBr key={`br-${this.idx}`}></CustomBr>
+        }
+        this.newLine = false
+        // TODO: default to a paragraph builder
+        // for styling (whitespace wrap) and convenience 
+        // in the dom purposes
         return token
     }
 
