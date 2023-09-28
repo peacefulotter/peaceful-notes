@@ -58,21 +58,7 @@ export default class Parser {
         return <Node key={`node-${this.idx}`} {...props} {...builder?.staticProps}>{children}</Node>
     }
 
-    // private getBuilder(token: string): Builder {
-    //     let fullToken = token;
-    //     while (tokenInSyntax(fullToken)) {
-    //         const curToken = this.pullToken()
-    //         if ( curToken === undefined ) break
-    //         fullToken += curToken
-            
-    //     }
-    //     if (fullToken.length > 1) {
-    //         this.idx--;
-    //         fullToken = fullToken.slice(0, -1)
-    //     }
-    //     return syntaxBuilders[fullToken as keyof typeof syntaxBuilders]
-    // }
-
+    // TOOD Add way to distinguish new line 
     private getFullToken(token: string) {
         let fullToken = '';
         let curToken: string | undefined = token;
@@ -82,6 +68,8 @@ export default class Parser {
             if ( curToken === undefined )
                 return { fullToken, push: false }
         }
+        console.log(fullToken);
+        
         return { fullToken, push: curToken !== ' ' }
     }
 

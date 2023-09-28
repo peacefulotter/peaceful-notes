@@ -24,7 +24,11 @@ export const CustomH3 = ({ children }: ComponentProps) =>
     <h3 className='break-words font-bold text-2xl mb-2'>{children}</h3>
 
 export const CustomUl = ({ children }: ComponentProps) => 
-    <ul className='break-words border-2 border-red-200 my-2 px-2 list-decimal'>{children}</ul>
+    <ul className='break-words my-2 px-2 list-decimal'>{children}</ul>
+
+export const CustomNumberUl = ({ children }: ComponentProps) => 
+    <ul className='break-words my-2 px-2 list-decimal bg-red-300'>{children}</ul>
+
 
 export const CustomLi = ({ children }: ComponentProps) => 
     <li className='break-words'>{children}</li>

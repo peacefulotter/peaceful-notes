@@ -60,7 +60,7 @@ export default function Home() {
 	const onChange: ChangeEventHandler<HTMLTextAreaElement> = ({target}) => setEditor(target.value)
 
 	return (
-		<main className='relative min-h-screen h-full max-h-screen p-12 bg-neutral-200'>
+		<main className='relative min-h-screen h-full max-h-screen p-12 bg-gray-400'>
 			<div className='absolute flex gap-2 bg-gradient-to-br from-purple-200 to-sky-200 rounded-tl-xl rounded-br-xl w-fit py-2 px-8'>
                 <div className='font-bold'>⌂ &gt; path &gt; to &gt; file &gt;</div>
                 <div className='font-thin'>notes.md</div>
