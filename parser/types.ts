@@ -9,7 +9,7 @@ export type ComponentProps<T = unknown, U extends object = {}> =
     PropsWithChildren<T & U>
 
 export type Builder<T extends object = {}, U extends object = {}> = {
-    endToken: Token;
+    endToken: RegExp;
     parseInner: boolean;
     node: ({ children, ...props }: ComponentProps<T, U>) => ReactNode;
     staticProps?: T;

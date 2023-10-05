@@ -1,6 +1,6 @@
 
 import { Fragment, ReactNode } from "react";
-import { syntaxBuilders, tokenInSyntax } from "./syntax";
+import { Syntax, SyntaxId, backspace, maxLengthPrefix, tokenInSyntax } from "./syntax";
 import { Line, Editor, Token, Builder } from "./types";
 import { CustomBr } from "./components";
 
@@ -19,38 +19,43 @@ export default class Parser {
         console.log(this.data);
     }
 
-    pullUntil(until: string, parse?: boolean): ReactNode {
+    pullUntil(until: RegExp, parse?: boolean): ReactNode {
         const acc = []
-        let matchUntil = ''
+        let window = this.pullWindow()
         
-        while (matchUntil !== until ) {
-            let token = this.pullToken()
-            if (token === undefined)
-                break;
-
-            matchUntil += token;
+        // FIXME: unsure bout this
+        while (!until.test(window)) {
             // console.log(`>> parseUntil until=${JSON.stringify(until)}, matchUntil=${JSON.stringify(matchUntil)} startWith: ${until.startsWith(matchUntil)} token: ${JSON.stringify(token)}`);
-            
-            if ( !until.startsWith(matchUntil) ) {
-                const prevToken = matchUntil.at(0) as string
-                const node = parse ? this.parseToken(prevToken) : prevToken;
-                acc.push(node)
-                matchUntil = ''
-            }
+            const prevToken = window.at(0) as string
+            const node = parse ? this.parseToken(prevToken) : prevToken;
+            acc.push(node)
+
+            window = this.pullWindow();
         }
 
         // Since we parsed it and we do not want an
         // additional Br component, just set newLine to true here
-        if (until === '\n')
+        // TODO: test if this works
+        if (until === backspace)
             this.newLine = true;
         
         return acc.length === 0 ? '...' : acc;
     }
 
-    pullToken(): Token | undefined {
+    // TODO: don't use this anymore for retrieving builders
+    // but only used by builders themselves to construct 
+    // additional props
+    private pullToken(): Token | undefined {
         return this.idx < this.data.length 
             ? this.data[this.idx++]
             : undefined
+    }
+
+    private pullWindow(): Token | undefined {
+        return this.idx < this.data.length 
+            ? this.data.slice(this.idx, this.idx++ + maxLengthPrefix).join()
+            : undefined
+        
     }
 
     private buildNode(builder: Builder): ReactNode {
@@ -58,38 +63,56 @@ export default class Parser {
         const props = builder.props?.(this) ||  {}
         const children = this.pullUntil(endToken, parseInner)
         const Node = builder.node;
-        console.log(props, builder?.staticProps);
-        
         return <Node key={`node-${this.idx}`} {...props} {...builder?.staticProps}>{children}</Node>
     }
 
-    private getFullToken(token: string) {
-        let fullToken = '';
-        let curToken: string | undefined = token;
-        while (tokenInSyntax(fullToken + curToken, this.newLine)) {
-            fullToken += curToken;
-            curToken = this.pullToken()
-            if ( curToken === undefined )
-                return { fullToken, push: false }
-        }
-        console.log(fullToken);
-        
-        return { fullToken, push: curToken !== ' ' }
-    }
+    // private getFullToken(acc: Token, best: Token): SyntaxId {
+    //     console.log(JSON.stringify(`acc: ${acc}, best: ${best}`));
+    //     if (acc.length > maxLengthPrefix)
+    //         return best;
+    //     const newToken = this.pullToken()
+    //     if (newToken === undefined)
+    //         return best;
 
-    private getBuilder(token: string): Builder<any, any> {
-        const { fullToken, push } = this.getFullToken(token)
-        if (push)
+    //     console.log("testing: " + acc + newToken);
+    //     console.log("inSyntax: " + tokenInSyntax(acc + newToken, this.newLine));
+        
+    //     const newBest = tokenInSyntax(acc + newToken, this.newLine)
+    //         ? acc + newToken : best
+    //     return this.getFullToken(acc + newToken, newBest)
+    // }
+
+    private getFullToken(token: string): SyntaxId | undefined {
+        
+
+
+        // let fullToken = '';
+        // let curToken: string | undefined = token;
+        
+        // let i = 0
+        // while (i++ < maxLengthPrefix) {
+        //     if (!tokenInSyntax(fullToken + curToken, this.newLine))
+        //         break
+
+        //     fullToken += curToken;
+        //     curToken = this.pullToken()
+        //     if ( curToken === undefined )
+        //         return fullToken
+        // }
+
+
+        if ( curToken !==  ' ' )
             this.idx--;
-        return syntaxBuilders[fullToken as keyof typeof syntaxBuilders]
+
+        return fullToken
     }
-    
 
     private parseToken = (token: string): ReactNode => {
 
         // console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
-        if (tokenInSyntax(token, this.newLine)) {
-            const builder = this.getBuilder(token)
+        const fullToken = this.getFullToken(token)
+        if (fullToken) {
+            const builder = Syntax[fullToken].builder
             this.newLine = false
             console.log('Builder', builder);
             return this.buildNode(builder)
@@ -110,6 +133,7 @@ export default class Parser {
     parse = (): ReactNode => {
         const acc: ReactNode[] = []
         for(;this.idx < this.data.length;) {
+            // TODO: don't pull here, parseToken takes care of it
             const token = this.pullToken()
             if (token === undefined) continue;
             const node = this.parseToken(token)
