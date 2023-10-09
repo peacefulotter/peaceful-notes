@@ -85,7 +85,6 @@ export default class Parser {
     private getFullToken(token: string): SyntaxId | undefined {
         
 
-
         // let fullToken = '';
         // let curToken: string | undefined = token;
         
@@ -99,6 +98,8 @@ export default class Parser {
         //     if ( curToken === undefined )
         //         return fullToken
         // }
+
+        // TODO: advance this.idx by length of token matched 
 
 
         if ( curToken !==  ' ' )
