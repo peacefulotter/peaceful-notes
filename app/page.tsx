@@ -43,6 +43,8 @@ f(x) = \\int_{-\\infty}^\\infty
 @@
 `
 
+const testString2 = `# H1`
+
 
 // const testString = `--
 // - a
@@ -51,7 +53,7 @@ f(x) = \\int_{-\\infty}^\\infty
 // --`
 
 export default function Home() {
-	const [editor, setEditor] = useState(testString)
+	const [editor, setEditor] = useState(testString2)
 	const onChange: ChangeEventHandler<HTMLTextAreaElement> = ({target}) => setEditor(target.value)
 
 	return (

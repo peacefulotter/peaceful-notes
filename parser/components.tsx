@@ -6,7 +6,7 @@ import { Highlight, themes } from 'prism-react-renderer'
 
 import { ComponentProps } from "./types"
 
-export const CustomBr = ({}: ComponentProps) => <div className="h-2"></div>
+export const CustomBr = () => <div className="h-2"></div>
 
 export const CustomNothing = ({ children }: ComponentProps) => 
     <>{children}<br/></>
@@ -56,7 +56,7 @@ export const CustomCode = ({ children }: ComponentProps) => {
 }
     
 
-export const CustomCodeblock = ({ children, language }: ComponentProps<unknown,{language: string | undefined}>) => {
+export const CustomCodeblock = ({ children, language }: ComponentProps<void, {language: string | undefined}>) => {
     const code = Array.isArray(children) 
         ? children.join('')
         : ''
@@ -82,5 +82,5 @@ export const CustomBold = ({ children }: ComponentProps) =>
 export const CustomItalic = ({ children }: ComponentProps) => 
     <i>{children}</i>
 
-export const CustomBoldItalic = ({ children }: ComponentProps) => 
-    <CustomBold><CustomItalic>{children}</CustomItalic></CustomBold>
+// export const CustomBoldItalic = ({ children }: ComponentProps) => 
+//     <CustomBold><CustomItalic>{children}</CustomItalic></CustomBold>

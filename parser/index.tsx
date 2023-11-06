@@ -1,8 +1,9 @@
 
 import { Fragment, ReactNode } from "react";
-import { Syntax, SyntaxId, backspace, maxLengthPrefix, tokenInSyntax } from "./syntax";
-import { Line, Editor, Token, Builder } from "./types";
+import { Syntax, Token, backspace, maxTokenLength } from "./syntax";
+import { Line, Editor, Frame } from "./types";
 import { CustomBr } from "./components";
+import getToken from "./token";
 
 
 export default class Parser {
@@ -21,16 +22,20 @@ export default class Parser {
 
     pullUntil(until: RegExp, parse?: boolean): ReactNode {
         const acc = []
-        let window = this.pullWindow()
         
-        // FIXME: unsure bout this
-        while (!until.test(window)) {
+        let frame = this.pullFrame()
+        while (frame && !until.test(frame)) {
             // console.log(`>> parseUntil until=${JSON.stringify(until)}, matchUntil=${JSON.stringify(matchUntil)} startWith: ${until.startsWith(matchUntil)} token: ${JSON.stringify(token)}`);
-            const prevToken = window.at(0) as string
-            const node = parse ? this.parseToken(prevToken) : prevToken;
-            acc.push(node)
+            // Only pull first token cause the rest will be pulled in next iteration 
+            if (parse) {
+                const node = this.parseFrame(frame);
+                acc.push(node)
+            }
+            else if (frame.at(0) !== undefined) {
+                acc.push(frame.at(0))
+            }
 
-            window = this.pullWindow();
+            frame = this.pullFrame();
         }
 
         // Since we parsed it and we do not want an
@@ -42,102 +47,60 @@ export default class Parser {
         return acc.length === 0 ? '...' : acc;
     }
 
-    // TODO: don't use this anymore for retrieving builders
-    // but only used by builders themselves to construct 
-    // additional props
-    private pullToken(): Token | undefined {
+    // A frame is a string potentially containing one or multiple tokens
+    private pullFrame(): Frame | undefined {
         return this.idx < this.data.length 
-            ? this.data[this.idx++]
-            : undefined
-    }
-
-    private pullWindow(): Token | undefined {
-        return this.idx < this.data.length 
-            ? this.data.slice(this.idx, this.idx++ + maxLengthPrefix).join()
+            ? this.data.slice(this.idx, this.idx + maxTokenLength).join('')
             : undefined
         
     }
 
-    private buildNode(builder: Builder): ReactNode {
+    // Returns the node built by the builder
+    private buildNodeFromToken(token: Token): ReactNode {
+        const builder = Syntax[token].builder
         const { endToken, parseInner } = builder
         const props = builder.props?.(this) ||  {}
         const children = this.pullUntil(endToken, parseInner)
         const Node = builder.node;
-        return <Node key={`node-${this.idx}`} {...props} {...builder?.staticProps}>{children}</Node>
+        const staticProps = builder.staticProps || {};
+        return <Node key={`node-${this.idx}`} {...props} {...staticProps}>{children}</Node>
     }
 
-    // private getFullToken(acc: Token, best: Token): SyntaxId {
-    //     console.log(JSON.stringify(`acc: ${acc}, best: ${best}`));
-    //     if (acc.length > maxLengthPrefix)
-    //         return best;
-    //     const newToken = this.pullToken()
-    //     if (newToken === undefined)
-    //         return best;
 
-    //     console.log("testing: " + acc + newToken);
-    //     console.log("inSyntax: " + tokenInSyntax(acc + newToken, this.newLine));
+    private parseFrame = (frame: string): ReactNode => {
+        const [token, matched] = getToken(frame, this.newLine)
+        console.log(`parseFrame == idx=${this.idx}, frame: ${frame}, token: ${JSON.stringify(token)}, matched: ${matched}`);
         
-    //     const newBest = tokenInSyntax(acc + newToken, this.newLine)
-    //         ? acc + newToken : best
-    //     return this.getFullToken(acc + newToken, newBest)
-    // }
-
-    private getFullToken(token: string): SyntaxId | undefined {
-        
-
-        // let fullToken = '';
-        // let curToken: string | undefined = token;
-        
-        // let i = 0
-        // while (i++ < maxLengthPrefix) {
-        //     if (!tokenInSyntax(fullToken + curToken, this.newLine))
-        //         break
-
-        //     fullToken += curToken;
-        //     curToken = this.pullToken()
-        //     if ( curToken === undefined )
-        //         return fullToken
-        // }
-
-        // TODO: advance this.idx by length of token matched 
-
-
-        if ( curToken !==  ' ' )
-            this.idx--;
-
-        return fullToken
-    }
-
-    private parseToken = (token: string): ReactNode => {
-
-        // console.log(`parseToken == idx=${this.idx}, token: ${JSON.stringify(token)}`);
-        const fullToken = this.getFullToken(token)
-        if (fullToken) {
-            const builder = Syntax[fullToken].builder
+        if (matched) {
+            this.idx += matched.length
             this.newLine = false
-            console.log('Builder', builder);
-            return this.buildNode(builder)
+            // TODO: use also the token as additional prop to the Node
+            return this.buildNodeFromToken(token) 
         }
-        else if ( token === ' ' )
-            return <Fragment key={`fragment-${this.idx}`}>&nbsp;</Fragment>
-        else if ( token === '\n' ) {
-            this.newLine = true
-            return <CustomBr key={`br-${this.idx}`}></CustomBr>
+        else
+            this.idx += 1
+    
+        switch (token) {
+            case ' ':
+                return <Fragment key={`fragment-${this.idx}`}>&nbsp;</Fragment>
+            case '\n':
+                this.newLine = true
+                return <CustomBr key={`br-${this.idx}`}></CustomBr>
+            default:
+                this.newLine = false
+                // TODO: default to a paragraph builder
+                // for styling (whitespace wrap) and convenience 
+                // in the dom purposes
+                return token
         }
-        this.newLine = false
-        // TODO: default to a paragraph builder
-        // for styling (whitespace wrap) and convenience 
-        // in the dom purposes
-        return token
     }
 
     parse = (): ReactNode => {
         const acc: ReactNode[] = []
         for(;this.idx < this.data.length;) {
-            // TODO: don't pull here, parseToken takes care of it
-            const token = this.pullToken()
-            if (token === undefined) continue;
-            const node = this.parseToken(token)
+            const frame = this.pullFrame()
+            if (frame === undefined) continue;
+            const node = this.parseFrame(frame)
             acc.push(node)
         }
         return acc;

@@ -1,171 +1,185 @@
-import { CustomBold, CustomBoldItalic, CustomCode, CustomCodeblock, CustomH1, CustomH2, CustomH3, CustomItalic, CustomLi, CustomMath, CustomNumberUl, CustomUl } from "@/parser/components";
-import { Builder, Token } from './types';
+import {
+  CustomBold,
+  // CustomBoldItalic,
+  CustomCode,
+  CustomCodeblock,
+  CustomH1,
+  CustomH2,
+  CustomH3,
+  CustomItalic,
+  CustomLi,
+  CustomMath,
+  CustomNumberUl,
+  CustomUl,
+} from "@/parser/components";
+import { TokenSyntax, createTokenSyntax } from "./types";
 import Parser from ".";
+import { create } from "domain";
 
-type SyntaxChar<T extends object = {}, U extends object = {}> = {
-    regex: RegExp
-    newLine?: boolean
-    builder: Builder<T, U>
+export const backspace = /\n/;
+
+export const maxTokenLength = 5; // Update value if some token can match on length >
+
+const createFrameToken = (token: string) => {
+  const prefix = token
+    .split("")
+    .map((t) => "\\" + t)
+    .join("");
+
+  return {
+    frame: new RegExp(`${prefix}.{0,${maxTokenLength - token.length}}`, "g"),
+    token: new RegExp(`${prefix}`, "g"),
+  };
+};
+
+const Tokens = {
+  H1: "#", // /(\#.{0,4})/g,
+  H2: "##",
+  H3: "###",
+  Code: "`",
+  Codeblock: "```",
+  MathInline: "@",
+  Mathblock: "@@",
+  Li: "-",
+  Ul: "--",
+  Italic: "*",
+  Bold: "**",
+  //  BoldItalic: /(\*\*\*.{0,2})/g,
+  //  NumberUl: /([0-9]|[1-9][0-9]\).{0,4})/g,
+} as const;
+
+export type Token = keyof typeof Tokens;
+
+function mapObject<T extends string | number | symbol, U, V>(
+  obj: Record<T, U>,
+  fn: (u: U) => V
+): Record<T, V> {
+  return Object.keys(obj).reduce((res, key) => {
+    res[key as keyof typeof res] = fn(obj[key as keyof typeof obj]);
+    return res;
+  }, {} as Record<T, V>);
 }
 
-export const backspace = /\n/
+export const RegisteredTokens = mapObject(Tokens, createFrameToken);
 
-// enforce type safety for builders
-const createBuilder = <T extends object = {}, U extends object = {}>(builder: Builder<T, U>): Builder<T, U> => builder;
-
-
-const RegisteredTokens = {
-    H1: /(\#.{0,4})/g,
-    H2: /(\#\#.{0,3})/g,
-    H3: /(\#\#\#.{0,2})/g,
-    Code: /(\`.{0,4})/g,
-    Codeblock: /(\`\`.{0,3})/g,
-    MathInline:  /(\@.{0,4})/g,
-    Mathblock: /(\@\@.{0,3})/g,
-    Li: /(\-.{0,4})/g,
-    Ul: /(\-\-.{0,3})/g,
-    Italic: /(\*.{0,4})/g,
-    Bold: /(\*\*.{0,3})/g,
-    BoldItalic: /(\*\*\*.{0,2})/g,
-    NumberUl: /([0-9]|[1-9][0-9].{0,4})/g
-} as const
-
-export const Syntax: Record<any, SyntaxChar<any, any>> = {
-    H1: { 
-        regex: RegisteredTokens.H1, 
-        newLine: true,
-        builder: createBuilder({ 
-            endToken: backspace,
-            parseInner: true,  
-            node: CustomH1 
-        })
+export const Syntax: Record<Token, TokenSyntax<any, any>> = {
+  H1: createTokenSyntax({
+    regex: RegisteredTokens.H1,
+    newLine: true,
+    builder: {
+      endToken: backspace,
+      parseInner: true,
+      node: CustomH1,
     },
-    H2: { 
-        regex: RegisteredTokens.H2, 
-        newLine: true,
-        builder: createBuilder({ 
-            endToken: backspace,
-            parseInner: true,  
-            node: CustomH2 
-        }) 
+  }),
+  H2: createTokenSyntax({
+    regex: RegisteredTokens.H2,
+    newLine: true,
+    builder: {
+      endToken: backspace,
+      parseInner: true,
+      node: CustomH2,
     },
-    H3: { 
-        regex: RegisteredTokens.H3, 
-        newLine: true,
-        builder: createBuilder({ 
-            endToken: backspace, 
-            parseInner: true, 
-            node: CustomH3 
-        })
+  }),
+  H3: createTokenSyntax({
+    regex: RegisteredTokens.H3,
+    newLine: true,
+    builder: {
+      endToken: backspace,
+      parseInner: true,
+      node: CustomH3,
     },
-    Code: { 
-        regex: RegisteredTokens.Code,
-        builder: createBuilder({ 
-            endToken: RegisteredTokens.Code, 
-            parseInner: false, 
-            node: CustomCode 
-        })
+  }),
+  Code: createTokenSyntax({
+    regex: RegisteredTokens.Code,
+    builder: {
+      endToken: RegisteredTokens.Code.frame,
+      parseInner: false,
+      node: CustomCode,
     },
-    Codeblock: { 
-        regex: RegisteredTokens.Codeblock, 
-        newLine: true,
-        builder: createBuilder({ 
-            endToken: RegisteredTokens.Codeblock, 
-            parseInner: false, 
-            node: CustomCodeblock,
-            props: (parser: Parser) => {
-                const node = parser.pullUntil(backspace, false)
-                return { 
-                    language: Array.isArray(node) 
-                        ? node.join('').trim() 
-                        : undefined 
-                }
-            } 
-        })
+  }),
+  Codeblock: createTokenSyntax({
+    regex: RegisteredTokens.Codeblock,
+    newLine: true,
+    builder: {
+      endToken: RegisteredTokens.Codeblock.frame,
+      parseInner: false,
+      node: CustomCodeblock,
+      props: (parser: Parser) => {
+        const node = parser.pullUntil(backspace, false);
+        return {
+          language: Array.isArray(node) ? node.join("").trim() : undefined,
+        };
+      },
     },
-    MathInline: { 
-        regex: RegisteredTokens.MathInline,
-        builder: createBuilder({ 
-            endToken: backspace, 
-            parseInner: false, 
-            staticProps: { inline: true }, 
-            node: CustomMath 
-        }) 
+  }),
+  MathInline: createTokenSyntax({
+    regex: RegisteredTokens.MathInline,
+    builder: {
+      endToken: backspace,
+      parseInner: false,
+      staticProps: { inline: true },
+      node: CustomMath,
     },
-    Mathblock: { 
-        regex: RegisteredTokens.Mathblock,
-        builder: createBuilder({
-            endToken: RegisteredTokens.Mathblock, 
-            parseInner: false, 
-            staticProps: { inline: false }, 
-            node: CustomMath 
-        })
+  }),
+  Mathblock: createTokenSyntax({
+    regex: RegisteredTokens.Mathblock,
+    builder: {
+      endToken: RegisteredTokens.Mathblock.frame,
+      parseInner: false,
+      staticProps: { inline: false },
+      node: CustomMath,
     },
-    Li: { 
-        regex: RegisteredTokens.Li, 
-        newLine: true,
-        builder: createBuilder({
-            endToken: backspace, 
-            parseInner: true, 
-            node: CustomLi 
-        })
+  }),
+  Li: createTokenSyntax({
+    regex: RegisteredTokens.Li,
+    newLine: true,
+    builder: {
+      endToken: backspace,
+      parseInner: true,
+      node: CustomLi,
     },
-    Ul: { 
-        regex: RegisteredTokens.Ul, 
-        newLine: true,
-        builder: createBuilder({
-            endToken: RegisteredTokens.Ul, 
-            parseInner: true, 
-            node: CustomUl 
-        }),
-    }, // FIXME: Ul not needed anymore unless for stylign?
-    Italic: { 
-        regex: RegisteredTokens.Italic,
-        builder: createBuilder({
-            endToken: RegisteredTokens.Italic,
-            parseInner: true,
-            node: CustomItalic,
-        })
-    }, 
-    Bold: { 
-        regex: RegisteredTokens.Bold,
-        builder: createBuilder({
-            endToken: RegisteredTokens.Bold,
-            parseInner: true,
-            node: CustomBold,
-        })
-    }, 
-    BoldItalic: { 
-        regex: RegisteredTokens.BoldItalic,
-        builder: createBuilder({ 
-            endToken: RegisteredTokens.BoldItalic,
-            parseInner: true,
-            node: CustomBoldItalic,
-        })
-    }, 
-    NumberUl: { 
-        regex: RegisteredTokens.NumberUl, 
-        newLine: true,
-        builder: createBuilder({ 
-            endToken: backspace,
-            parseInner: true,
-            node: CustomNumberUl,
-        })
-    } ,
-} as const
-
-export const maxLengthPrefix = 5 // Update value if some token can match on length > 
-
-export type SyntaxId = keyof typeof Syntax 
-
-export const tokenInSyntax = (token: Token, newLine: boolean) => {
-    for (let syntax of Object.values(Syntax)) {
-        const { regex, newLine: newLineSyntax } = syntax;
-        if (
-            (newLineSyntax ? (newLine === newLineSyntax) : true) &&
-            regex.test(token)
-        )
-            return true
-    }
-    return false;
-}
+  }),
+  Ul: createTokenSyntax({
+    regex: RegisteredTokens.Ul,
+    newLine: true,
+    builder: {
+      endToken: RegisteredTokens.Ul.frame,
+      parseInner: true,
+      node: CustomUl,
+    },
+  }), // FIXME: Ul not needed anymore unless for stylign?
+  Italic: createTokenSyntax({
+    regex: RegisteredTokens.Italic,
+    builder: {
+      endToken: RegisteredTokens.Italic.frame,
+      parseInner: true,
+      node: CustomItalic,
+    },
+  }),
+  Bold: createTokenSyntax({
+    regex: RegisteredTokens.Bold,
+    builder: {
+      endToken: RegisteredTokens.Bold.frame,
+      parseInner: true,
+      node: CustomBold,
+    },
+  }),
+  // BoldItalic: createTokenSyntax({
+  //   regex: RegisteredTokens.BoldItalic,
+  //   builder: createBuilder({
+  //     endToken: RegisteredTokens.BoldItalic,
+  //     parseInner: true,
+  //     node: CustomBoldItalic,
+  //   }),
+  // },
+  // NumberUl: createTokenSyntax({
+  //   regex: RegisteredTokens.NumberUl,
+  //   newLine: true,
+  //   builder: createBuilder({
+  //     endToken: backspace,
+  //     parseInner: true,
+  //     node: CustomNumberUl,
+  //   }),
+  // },
+} as const;
