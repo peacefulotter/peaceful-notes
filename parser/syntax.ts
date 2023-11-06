@@ -32,6 +32,15 @@ const createFrameToken = (token: string) => {
   };
 };
 
+// TODO: frame token must be created on the fly based on the frame length as well
+// TODO: pass RegExp to createFrameToken as well
+/**
+ * TODO:
+ * refactor involving tokens whitelist and blacklist,
+ * remove newLine property from TokenSyntax,
+ * enable or disable tokens while parsing using the whitelist and blacklist,
+ * */
+
 const Tokens = {
   H1: "#", // /(\#.{0,4})/g,
   H2: "##",
@@ -61,6 +70,14 @@ function mapObject<T extends string | number | symbol, U, V>(
 }
 
 export const RegisteredTokens = mapObject(Tokens, createFrameToken);
+
+const frame = "## H1";
+console.log(RegisteredTokens.H1.frame, RegisteredTokens.H1.frame.test(frame));
+console.log(RegisteredTokens.H2.frame, RegisteredTokens.H2.frame.test(frame));
+
+const frame2 = "# H1d";
+console.log(RegisteredTokens.H1.frame, RegisteredTokens.H1.frame.test(frame2));
+console.log(RegisteredTokens.H2.frame, RegisteredTokens.H2.frame.test(frame2));
 
 export const Syntax: Record<Token, TokenSyntax<any, any>> = {
   H1: createTokenSyntax({

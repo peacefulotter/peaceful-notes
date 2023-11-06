@@ -26,9 +26,13 @@ const frameMatchesSyntax = (
 const getLongestTokenMatchingFrame = (frame: Frame, newLine: boolean): [Token, string] | undefined => {
     let best: [Token, string] | undefined = undefined
     for (const [token, syntax] of Object.entries(Syntax)) {
-        const { regex } = syntax
-        if (frameMatchesSyntax(frame, newLine, syntax) && (best === undefined || token.length > best.length))
-            best = [token as Token, frame.match(regex.token)![0]]
+        console.log('testing for:', frame, ', token:', token, 'syntax:', syntax);
+        if (frameMatchesSyntax(frame, newLine, syntax)) {
+            const match = frame.match(syntax.regex.token)![0]
+            console.log('match:', match, best === undefined || match.length > best[1].length);
+            if (best === undefined || match.length > best[1].length)
+                best = [token as Token, match]
+        }
     }   
     return best
 }
